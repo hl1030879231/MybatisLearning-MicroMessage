@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--这个是Mybatis的Sql语句配置文件
+
+       Copyright 2009-2016 the original author or authors.
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+
+-->
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace用于多人开发，区分每一个命名域 -->
+<mapper namespace="com.bob.dao.IMessage">
+
+  <resultMap type="com.bob.beans.Message" id="MessageResult">
+  <!-- column对应数据库内字段的名称，注意是sql语句查询结果的列表， property对应表对应的javabean的属性名-->
+    <id column="ID" jdbcType="INTEGER" property="id"/>
+    <result column="COMMAND" jdbcType="VARCHAR" property="command"/>
+    <result column="DESCRIPTION" jdbcType="VARCHAR" property="description"/>
+    <result column="CONTENT" jdbcType="VARCHAR" property="content"/>
+  </resultMap>
+
+
+<!-- resultMap与需要对应的resultMap标签的id对应， parameterType表示参数类型，只能传一个（因此多参数需要封装）-->
+ <!--  <select id="queryMessageList" parameterType="com.bob.beans.Message" resultMap="MessageResult">
+    select ID,COMMAND,DESCRIPTION,CONTENT FROM MESSAGE where 1=1
+    &&在OGNL表达式中可以用and代替，也可以用xml格式&amp;&amp; ""可以用!&quot;&quot代替，此外OGNL表达式支持java自带方法
+    <if test="command != null &amp;&amp; !&quot;&quot;.equals(command.trim())">
+    	and COMMAND=#{command}
+    </if>
+    <if test="description != null &amp;&amp; !&quot;&quot;.equals(description.trim())">
+    	and DESCRIPTION like '%' #{description} '%'
+    </if>
+  </select> -->
+  
+  
+  <!-- <include refid="columns"/>表示引用id为columns的sql语句 -->
+   <select id="queryMessageList" parameterType="java.util.Map" resultMap="MessageResult">
+    select <include refid="columns"/> from MESSAGE
+    <where>
+    	<if test="message.command != null and !&quot;&quot;.equals(message.command.trim())">
+	    	and COMMAND=#{message.command}
+	    </if>
+	    <if test="message.description != null and !&quot;&quot;.equals(message.description.trim())">
+	    	and DESCRIPTION like '%' #{message.description} '%'
+	    </if>
+    </where>
+    order by ID limit #{page.dbIndex},#{page.dbNumber}
+  </select>
+  
+  <!-- 一个参数也类型为String等基本类型时，参数需要用_parameter替换 -->
+   <delete id="deleteOne" parameterType="int" >
+    DELETE FROM MESSAGE WHERE id = #{_parameter}
+  </delete>
+  
+  <!-- separator标签标识item之间用 ，来分隔 -->
+  <delete id="deleteBatch" parameterType="java.util.List">
+    DELETE FROM MESSAGE WHERE id in(
+    	<foreach collection="list" item="item" separator=",">
+    		#{item}
+    	</foreach>
+    )
+  </delete>
+  
+  <!--resultType只返回java结果类型  -->
+  <select id="count"  parameterType="com.bob.beans.Message" resultType="int">
+  	select count(*) from MESSAGE
+    <where>
+    	<if test="command != null and !&quot;&quot;.equals(command.trim())">
+	    	and COMMAND=#{command}
+	    </if>
+	    <if test="description != null and !&quot;&quot;.equals(description.trim())">
+	    	and DESCRIPTION like '%' #{description} '%'
+	    </if>
+    </where>
+  </select>
+  
+    
+  <select id="queryMessageListByPage" parameterType="java.util.Map" resultMap="MessageResult">
+    select <include refid="columns"/> from MESSAGE
+    <where>
+    	<if test="message.command != null and !&quot;&quot;.equals(message.command.trim())">
+	    	and COMMAND=#{message.command}
+	    </if>
+	    <if test="message.description != null and !&quot;&quot;.equals(message.description.trim())">
+	    	and DESCRIPTION like '%' #{message.description} '%'
+	    </if>
+    </where>
+    order by ID
+  </select>
+  
+   <insert id="insertOne" parameterType="com.bob.beans.Message" useGeneratedKeys="false">
+    INSERT INTO MESSAGE
+    ( id,
+    command,
+    description,
+    content
+    )
+    VALUES
+    ( #{id},
+    #{command},
+    #{description},
+    #{content}
+    )
+  </insert>
+  
+  <sql id="columns">ID,COMMAND,DESCRIPTION,CONTENT</sql>
+
+ <!--  <select id="version" parameterType="long" resultType="int">
+    SELECT version FROM user WHERE id = #{id,jdbcType=INTEGER}
+  </select>
+
+  <delete id="delete" parameterType="UserAlias">
+    DELETE FROM user WHERE id = #{id:INTEGER}
+  </delete>
+
+  <insert id="insert" parameterType="UserAlias" useGeneratedKeys="false">
+    INSERT INTO user
+    ( id,
+    username,
+    password,
+    administrator
+    )
+    VALUES
+    ( #{id},
+    #{username,jdbcType=VARCHAR},
+    #{password.encrypted:VARCHAR},
+    #{administrator,jdbcType=BOOLEAN}
+    )
+  </insert>
+
+  <update id="update" parameterType="UserAlias">
+    UPDATE user SET
+    username = #{username,jdbcType=VARCHAR},
+    password = #{password.encrypted,jdbcType=VARCHAR},
+    administrator = #{administrator,jdbcType=BOOLEAN}
+    WHERE
+    id = #{id,jdbcType=INTEGER}
+  </update>
+
+    Unique constraint check
+  <select id="isUniqueUsername" parameterType="map" resultType="boolean">
+    SELECT (count(*) = 0)
+    FROM user
+    WHERE ((#{userId,jdbcType=BIGINT} IS NOT NULL AND id != #{userId,jdbcType=BIGINT}) OR #{userId,jdbcType=BIGINT} IS
+    NULL)  other than me
+    AND (username = #{username,jdbcType=VARCHAR})
+  </select> -->
+</mapper>
